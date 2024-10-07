@@ -8,12 +8,13 @@
   "author": "Leo Giovanetti <hello@leog.me>",
   "license": "Apache-2.0",
   "devDependencies": {
-    "semantic-release": "^24.1.2",
+    "semantic-release": "24.1.2",
     "vitest": "2.1.2"
   },
   "scripts": {
     "test": "vitest",
-    "prepublishOnly": "npm test"
+    "prepublishOnly": "npm test",
+    "semantic-release": "semantic-release"
   },
   "files": [
     "index.mjs",
