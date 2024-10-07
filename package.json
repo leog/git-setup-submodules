@@ -1,0 +1,25 @@
+{
+  "name": "git-setup-submodules",
+  "version": "1.0.0",
+  "description": "A script to setup git submodules from a configuration file",
+  "bin": {
+    "git-setup-submodules": "./index.mjs"
+  },
+  "author": "Leo Giovanetti <hello@leog.me>",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "semantic-release": "^24.1.2",
+    "vitest": "2.1.2"
+  },
+  "scripts": {
+    "test": "vitest",
+    "prepublishOnly": "npm test"
+  },
+  "files": [
+    "index.mjs",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
