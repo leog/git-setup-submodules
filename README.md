@@ -1,8 +1,23 @@
 # Git Submodule Setup
 
+[![npm version](https://img.shields.io/npm/v/git-setup-submodules.svg)](https://www.npmjs.com/package/git-setup-submodules)
+[![License](https://img.shields.io/npm/l/git-setup-submodules.svg)](https://github.com/leogme/git-setup-submodules/blob/main/LICENSE)
+
+A CLI tool to automate Git submodule setup from a configuration file.
+
+## Quick Start
+
+```bash
+# Create a config file
+echo "libs/shared-utils" > .git-setup-submodules
+
+# Run the setup
+npx git-setup-submodules
+```
+
 ## Overview
 
-This script automates the setup of Git submodules in your project based on a configuration file. It reads the configuration, checks access to the specified repositories, adds them as submodules at specified paths, and sets them to specific branches or tags.
+This tool automates the setup of Git submodules in your project based on a configuration file. It reads the configuration, checks access to the specified repositories, adds them as submodules at specified paths, and sets them to specific branches or tags.
 
 ## Features
 
@@ -10,12 +25,15 @@ This script automates the setup of Git submodules in your project based on a con
 - **Customizable Paths and Branches**: Specify custom local paths and branches or tags for each submodule.
 - **Access Verification**: Checks if you have access to the submodule repositories before adding them.
 - **Clean Working Directory**: Unstages submodule changes to keep your working directory clean.
+- **Dry Run Mode**: Preview what changes would be made without executing them.
+- **Custom Config File**: Use a different configuration file with `--config`.
+- **Input Validation**: Validates configuration and provides clear error messages.
 
-## Prerequisites
+## Requirements
 
-- **Git**: Ensure Git is installed and accessible in your system's PATH.
-- **Node.js**: This script is written in Node.js and requires Node.js to run.
-- **npm**: Node Package Manager, usually installed with Node.js.
+- **Node.js**: Version 16.0.0 or higher
+- **Git**: Version 2.23.0 or higher (required for `git restore --staged`)
+- **npm**: Node Package Manager (usually installed with Node.js)
 
 ## Installation
 
@@ -41,6 +59,39 @@ You can run the script without installing it by using `npx`:
 
 ```bash
 npx git-setup-submodules
+```
+
+## CLI Options
+
+```
+git-setup-submodules [OPTIONS]
+
+OPTIONS:
+  -h, --help              Show help message
+  -n, --dry-run           Preview changes without executing git commands
+  -q, --quiet             Suppress non-essential output
+  -c, --config <path>     Path to config file (default: .git-setup-submodules)
+  -b, --default-branch <name>
+                          Default branch when not specified (default: main)
+```
+
+### Examples
+
+```bash
+# Standard usage
+git-setup-submodules
+
+# Preview what would happen
+git-setup-submodules --dry-run
+
+# Use a custom config file
+git-setup-submodules --config ./submodules.conf
+
+# Use 'master' as the default branch
+git-setup-submodules --default-branch master
+
+# Quiet mode (only show errors)
+git-setup-submodules --quiet
 ```
 
 ## Configuration
@@ -97,6 +148,7 @@ Each line in the configuration file represents a submodule and follows this form
 
 - Lines starting with `#` or `//` are treated as comments.
 - Blank lines are ignored.
+- Inline comments with `//` are supported.
 
 ### Sample Configuration File
 
@@ -184,10 +236,72 @@ npx git-setup-submodules
    - **Unstage Changes**
      - Runs `git restore --staged` to unstage the submodule and `.gitmodules`.
 
-5. **Final Output**
+5. **Summary Output**
 
-   - Displays a success message if submodules were added.
-   - Displays an error message if no submodules were added.
+   - Displays a summary with counts of successful and failed submodule additions.
+
+## Troubleshooting
+
+### Common Issues
+
+#### "Configuration file not found"
+
+Make sure the `.git-setup-submodules` file exists in your project root, or specify a custom path with `--config`:
+
+```bash
+git-setup-submodules --config path/to/config
+```
+
+#### "Failed to get remote origin URL"
+
+This error occurs when:
+- You're not in a git repository. Run `git init` first.
+- The repository has no remote. Add one with `git remote add origin <url>`.
+
+#### "Access denied" errors
+
+Check that:
+- Your SSH keys are properly configured (`ssh -T git@github.com`)
+- You have read access to the repository
+- The repository exists at the expected URL
+
+#### ".gitmodules already exists"
+
+The script won't run if submodules are already configured. If you want to reconfigure:
+
+```bash
+# Remove existing submodules first
+rm .gitmodules
+rm -rf .git/modules/*
+git config --remove-section submodule.<path>  # for each submodule
+```
+
+#### "git restore" command not found
+
+The `git restore` command requires Git 2.23.0 or later. Update Git:
+
+```bash
+# macOS
+brew upgrade git
+
+# Ubuntu/Debian
+sudo apt-get update && sudo apt-get install git
+
+# Check version
+git --version
+```
+
+#### Invalid characters in path
+
+Module paths cannot contain shell metacharacters like `;`, `|`, `$`, etc. Use only alphanumeric characters, `/`, `-`, `_`, and `.`.
+
+### Debug Mode
+
+Use `--dry-run` to preview what commands would be executed without making changes:
+
+```bash
+git-setup-submodules --dry-run
+```
 
 ## Error Handling
 
@@ -203,6 +317,10 @@ npx git-setup-submodules
 
   - If access to a submodule repository is denied, the script logs an error and continues with the next submodule.
 
+- **Invalid Configuration Lines**
+
+  - Lines with invalid syntax or dangerous characters are skipped with an error message.
+
 ## Logging
 
 - **Progress Messages**
@@ -215,7 +333,7 @@ npx git-setup-submodules
 
 - **Final Status**
 
-  - Displays a summary message upon completion.
+  - Displays a summary message upon completion with success/failure counts.
 
 ## Contributing
 
@@ -229,21 +347,98 @@ npx git-setup-submodules
    git checkout -b feature/your-feature-name
    ```
 
-3. **Commit Your Changes**
+3. **Run Tests**
+
+   ```bash
+   npm test
+   ```
+
+4. **Commit Your Changes**
 
    ```bash
    git commit -m "Add your feature"
    ```
 
-4. **Push to Your Fork**
+5. **Push to Your Fork**
 
    ```bash
    git push origin feature/your-feature-name
    ```
 
-5. **Open a Pull Request**
+6. **Open a Pull Request**
 
    - Submit a pull request to the main repository for review.
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Run tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+## Releasing
+
+This project uses [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for versioning and changelog generation. Releases follow [Conventional Commits](https://www.conventionalcommits.org/).
+
+### Commit Message Format
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+**Types:**
+- `feat`: A new feature (bumps minor version)
+- `fix`: A bug fix (bumps patch version)
+- `docs`: Documentation only changes
+- `style`: Code style changes (formatting, semicolons, etc.)
+- `refactor`: Code refactoring
+- `perf`: Performance improvements
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks
+
+**Breaking Changes:** Add `BREAKING CHANGE:` in the footer or `!` after the type (e.g., `feat!:`) to trigger a major version bump.
+
+### Release Commands
+
+```bash
+# Preview what would happen (dry run)
+npm run release:dry
+
+# Create a release (auto-determines version from commits)
+npm run release
+
+# Create a specific version bump
+npm run release:patch   # 1.0.0 -> 1.0.1
+npm run release:minor   # 1.0.0 -> 1.1.0
+npm run release:major   # 1.0.0 -> 2.0.0
+
+# First release (if starting fresh)
+npm run release:first
+```
+
+### Publishing
+
+After running a release command:
+
+```bash
+# Push the commit and tag
+git push --follow-tags origin main
+
+# The GitHub Action will automatically publish to npm when a tag is pushed
+```
 
 ## License
 
